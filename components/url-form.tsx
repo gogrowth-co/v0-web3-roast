@@ -77,9 +77,13 @@ export function UrlForm() {
           placeholder="Enter your Web3 website URL"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          className="h-10 sm:h-11"
+          className="h-10 sm:h-11 border-brand-gray-light dark:border-brand-gray-dark focus-visible:ring-brand-purple"
         />
-        <Button type="submit" disabled={isLoading} className="h-10 sm:h-11">
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="h-10 sm:h-11 bg-brand-orange hover:bg-brand-orange/90 text-white"
+        >
           {isLoading ? "Analyzing..." : "Analyze Free"}
           {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
         </Button>

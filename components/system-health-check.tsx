@@ -59,12 +59,12 @@ export function SystemHealthCheck({ roastId }: SystemHealthCheckProps) {
       case "error":
         return <AlertCircle className="h-5 w-5 text-red-500" />
       default:
-        return <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
+        return <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
     }
   }
 
   return (
-    <Card>
+    <Card className="border-brand-gray-light dark:border-brand-gray-dark">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>System Health Check</span>
@@ -77,7 +77,7 @@ export function SystemHealthCheck({ roastId }: SystemHealthCheckProps) {
       <CardContent>
         {loading && !diagnostics ? (
           <div className="flex items-center justify-center py-4">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
+            <Loader2 className="h-6 w-6 animate-spin text-brand-purple" />
           </div>
         ) : (
           <div className="space-y-4">
@@ -86,7 +86,10 @@ export function SystemHealthCheck({ roastId }: SystemHealthCheckProps) {
                 {Object.entries(diagnostics)
                   .filter(([key, value]) => key !== "timestamp" && value !== null)
                   .map(([key, value]: [string, any]) => (
-                    <div key={key} className="rounded-md border p-3">
+                    <div
+                      key={key}
+                      className="rounded-md border border-brand-gray-light dark:border-brand-gray-dark p-3"
+                    >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           {getStatusIcon(value.status)}
@@ -100,19 +103,19 @@ export function SystemHealthCheck({ roastId }: SystemHealthCheckProps) {
                                 ? "text-amber-500"
                                 : value.status === "success"
                                   ? "text-green-500"
-                                  : "text-gray-500"
+                                  : "text-muted-foreground"
                           }`}
                         >
                           {value.status}
                         </span>
                       </div>
-                      {value.message && <p className="mt-1 text-sm text-gray-500">{value.message}</p>}
+                      {value.message && <p className="mt-1 text-sm text-muted-foreground">{value.message}</p>}
                       {value.details && (
                         <details className="mt-2">
-                          <summary className="cursor-pointer text-xs text-gray-500 hover:text-gray-700">
+                          <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
                             View details
                           </summary>
-                          <pre className="mt-2 max-h-40 overflow-auto rounded bg-gray-50 p-2 text-xs">
+                          <pre className="mt-2 max-h-40 overflow-auto rounded bg-muted/30 dark:bg-muted/10 p-2 text-xs">
                             {JSON.stringify(value.details, null, 2)}
                           </pre>
                         </details>
@@ -120,12 +123,12 @@ export function SystemHealthCheck({ roastId }: SystemHealthCheckProps) {
                     </div>
                   ))}
 
-                <div className="text-xs text-gray-400">
+                <div className="text-xs text-muted-foreground">
                   Last checked: {new Date(diagnostics.timestamp).toLocaleString()}
                 </div>
               </>
             ) : (
-              <div className="py-2 text-center text-sm text-gray-500">Failed to load diagnostics</div>
+              <div className="py-2 text-center text-sm text-muted-foreground">Failed to load diagnostics</div>
             )}
           </div>
         )}
@@ -134,7 +137,7 @@ export function SystemHealthCheck({ roastId }: SystemHealthCheckProps) {
         <Button
           variant="outline"
           size="sm"
-          className="w-full"
+          className="w-full border-brand-purple text-brand-purple hover:bg-brand-purple/10"
           disabled={loading}
           onClick={() => {
             window.location.reload()

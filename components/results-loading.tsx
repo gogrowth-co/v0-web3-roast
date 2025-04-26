@@ -10,6 +10,7 @@ import type { Roast } from "@/lib/types"
 import { EnvWarning } from "@/components/env-warning"
 import { retryRoast } from "@/lib/actions/roast"
 import { SystemHealthCheck } from "@/components/system-health-check"
+import { SiteFooter } from "@/components/site-footer"
 
 interface ResultsLoadingProps {
   roast: Roast
@@ -75,7 +76,7 @@ export function ResultsLoading({ roast, missingVars = [] }: ResultsLoadingProps)
             </Link>
           </div>
           <div className="flex items-center gap-2">
-            <Link href={`/debug/${roast.id}`} className="text-sm text-gray-500 hover:text-gray-900">
+            <Link href={`/debug/${roast.id}`} className="text-sm text-muted-foreground hover:text-foreground">
               Debug
             </Link>
           </div>
@@ -89,27 +90,27 @@ export function ResultsLoading({ roast, missingVars = [] }: ResultsLoadingProps)
           <div className="space-y-8">
             <div>
               <h1 className="text-3xl font-bold tracking-tighter">Analyzing Your Web3 Project</h1>
-              <p className="text-gray-500 dark:text-gray-400">We're roasting {roast.url}</p>
+              <p className="text-muted-foreground">We're roasting {roast.url}</p>
             </div>
 
             <div className="grid gap-6 md:grid-cols-3">
               <div className="md:col-span-2">
-                <Card>
+                <Card className="border-brand-gray-light dark:border-brand-gray-dark">
                   <CardHeader className="pb-4">
-                    <div className="h-8 w-48 animate-pulse rounded-md bg-gray-200 dark:bg-gray-800" />
-                    <div className="h-4 w-72 animate-pulse rounded-md bg-gray-200 dark:bg-gray-800" />
+                    <div className="h-8 w-48 animate-pulse rounded-md bg-muted dark:bg-muted/20" />
+                    <div className="h-4 w-72 animate-pulse rounded-md bg-muted dark:bg-muted/20" />
                   </CardHeader>
                   <CardContent>
-                    <div className="h-64 w-full animate-pulse rounded-md bg-gray-200 dark:bg-gray-800" />
+                    <div className="h-64 w-full animate-pulse rounded-md bg-muted dark:bg-muted/20" />
                   </CardContent>
                 </Card>
 
                 <div className="mt-6 flex flex-col items-center justify-center">
-                  <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-purple-600 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-                  <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                  <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-brand-purple border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+                  <p className="mt-4 text-center text-sm text-muted-foreground">
                     This typically takes about 1-2 minutes. Please don't refresh the page.
                   </p>
-                  <p className="mt-2 text-center text-sm text-gray-500">
+                  <p className="mt-2 text-center text-sm text-muted-foreground">
                     Time elapsed: {Math.floor(loadingTime / 60)}:{(loadingTime % 60).toString().padStart(2, "0")}
                   </p>
 
@@ -123,13 +124,18 @@ export function ResultsLoading({ roast, missingVars = [] }: ResultsLoadingProps)
                         size="sm"
                         onClick={handleRetry}
                         disabled={isRetrying}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 border-brand-purple text-brand-purple hover:bg-brand-purple/10"
                       >
                         <RefreshCw className="h-4 w-4" />
                         {isRetrying ? "Retrying..." : "Retry Analysis"}
                       </Button>
 
-                      <Button variant="link" size="sm" onClick={() => setShowDiagnostics(true)} className="mt-2">
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={() => setShowDiagnostics(true)}
+                        className="mt-2 text-brand-purple"
+                      >
                         Show System Diagnostics
                       </Button>
                     </div>
@@ -145,31 +151,31 @@ export function ResultsLoading({ roast, missingVars = [] }: ResultsLoadingProps)
               </div>
 
               <div>
-                <Card>
+                <Card className="border-brand-gray-light dark:border-brand-gray-dark">
                   <CardHeader className="pb-4">
-                    <div className="h-8 w-48 animate-pulse rounded-md bg-gray-200 dark:bg-gray-800" />
-                    <div className="h-4 w-36 animate-pulse rounded-md bg-gray-200 dark:bg-gray-800" />
+                    <div className="h-8 w-48 animate-pulse rounded-md bg-muted dark:bg-muted/20" />
+                    <div className="h-4 w-36 animate-pulse rounded-md bg-muted dark:bg-muted/20" />
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="h-16 w-full animate-pulse rounded-md bg-gray-200 dark:bg-gray-800" />
-                      <div className="h-16 w-full animate-pulse rounded-md bg-gray-200 dark:bg-gray-800" />
-                      <div className="h-16 w-full animate-pulse rounded-md bg-gray-200 dark:bg-gray-800" />
+                      <div className="h-16 w-full animate-pulse rounded-md bg-muted dark:bg-muted/20" />
+                      <div className="h-16 w-full animate-pulse rounded-md bg-muted dark:bg-muted/20" />
+                      <div className="h-16 w-full animate-pulse rounded-md bg-muted dark:bg-muted/20" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="mt-6">
+                <Card className="mt-6 border-brand-gray-light dark:border-brand-gray-dark">
                   <CardHeader className="pb-4">
-                    <div className="h-8 w-48 animate-pulse rounded-md bg-gray-200 dark:bg-gray-800" />
-                    <div className="h-4 w-36 animate-pulse rounded-md bg-gray-200 dark:bg-gray-800" />
+                    <div className="h-8 w-48 animate-pulse rounded-md bg-muted dark:bg-muted/20" />
+                    <div className="h-4 w-36 animate-pulse rounded-md bg-muted dark:bg-muted/20" />
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="h-4 w-full animate-pulse rounded-md bg-gray-200 dark:bg-gray-800" />
-                      <div className="h-4 w-full animate-pulse rounded-md bg-gray-200 dark:bg-gray-800" />
-                      <div className="h-4 w-full animate-pulse rounded-md bg-gray-200 dark:bg-gray-800" />
-                      <div className="h-4 w-full animate-pulse rounded-md bg-gray-200 dark:bg-gray-800" />
+                      <div className="h-4 w-full animate-pulse rounded-md bg-muted dark:bg-muted/20" />
+                      <div className="h-4 w-full animate-pulse rounded-md bg-muted dark:bg-muted/20" />
+                      <div className="h-4 w-full animate-pulse rounded-md bg-muted dark:bg-muted/20" />
+                      <div className="h-4 w-full animate-pulse rounded-md bg-muted dark:bg-muted/20" />
                     </div>
                   </CardContent>
                 </Card>
@@ -179,13 +185,7 @@ export function ResultsLoading({ roast, missingVars = [] }: ResultsLoadingProps)
         </div>
       </main>
 
-      <footer className="border-t bg-background">
-        <div className="container flex flex-col gap-6 py-8 md:flex-row md:items-center md:justify-between md:py-12">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            © {new Date().getFullYear()} Web3 ROAST. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

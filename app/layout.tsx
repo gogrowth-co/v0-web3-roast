@@ -3,8 +3,13 @@ import "@/app/globals.css"
 import { Inter } from "next/font/google"
 import { Toaster } from "@/components/ui/toaster"
 import { logEnvironmentStatus } from "@/lib/utils/verify-environment"
+import { ThemeProvider } from "@/components/theme-provider"
 
-const inter = Inter({ subsets: ["latin"] })
+// Load Inter font with Next.js font optimization
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+})
 
 export const metadata = {
   title: "Web3 ROAST - Brutally Honest Web3 Landing Page Analysis",
@@ -21,10 +26,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        {children}
-        <Toaster />
+    <html lang="en" className={inter.className} suppressHydrationWarning>
+      <body className="min-h-screen bg-background font-sans antialiased">
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )

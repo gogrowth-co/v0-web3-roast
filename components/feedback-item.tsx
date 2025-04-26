@@ -33,7 +33,7 @@ export function FeedbackItem({ item }: FeedbackItemProps) {
       case "low":
         return "border-blue-200 bg-blue-50 dark:border-blue-900/50 dark:bg-blue-900/10"
       default:
-        return "border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900"
+        return "border-brand-gray-light bg-muted/30 dark:border-brand-gray-dark dark:bg-muted/10"
     }
   }
 

@@ -29,7 +29,13 @@ export function ShareButton() {
   }
 
   return (
-    <Button variant="outline" size="sm" className="hidden md:flex" onClick={handleShare} disabled={isSharing}>
+    <Button
+      variant="outline"
+      size="sm"
+      className="hidden md:flex border-brand-purple text-brand-purple hover:bg-brand-purple/10"
+      onClick={handleShare}
+      disabled={isSharing}
+    >
       <Share2 className="mr-2 h-4 w-4" />
       Share Results
     </Button>
