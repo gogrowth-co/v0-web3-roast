@@ -33,10 +33,18 @@ export function ResultsLoading({ roast, missingVars = [] }: ResultsLoadingProps)
       setShowDiagnostics(true)
     }
 
+    // If loading takes more than 3 minutes (180 seconds), auto-retry once
+    if (loadingTime === 180 && !isRetrying) {
+      console.log("Auto-retrying analysis after 3 minutes...")
+      handleRetry()
+    }
+
     return () => clearInterval(interval)
-  }, [loadingTime, showDiagnostics])
+  }, [loadingTime, showDiagnostics, isRetrying])
 
   const handleRetry = async () => {
+    if (isRetrying) return // Prevent multiple simultaneous retries
+
     setIsRetrying(true)
     try {
       const result = await retryRoast(roast.id)
@@ -61,7 +69,10 @@ export function ResultsLoading({ roast, missingVars = [] }: ResultsLoadingProps)
         variant: "destructive",
       })
     } finally {
-      setIsRetrying(false)
+      // Add a slight delay before allowing another retry
+      setTimeout(() => {
+        setIsRetrying(false)
+      }, 3000)
     }
   }
 

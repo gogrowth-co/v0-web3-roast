@@ -16,16 +16,25 @@ export async function captureScreenshot(url: string): Promise<string> {
     // Build the Screenshot Machine API URL with the API key from environment variables
     const screenshotUrl = `https://api.screenshotmachine.com?key=${apiKey}&url=${encodeURIComponent(url)}&dimension=1920x1080&format=png&cacheLimit=0&delay=2000&timeout=20000`
 
-    // In a production environment, we would download this image and upload it to Supabase Storage
-    // This would use retry logic for the request and upload
-    return await withRetry(
+    // Set a timeout for the screenshot capture
+    const capturePromise = withRetry(
       async () => {
         debugLog("captureScreenshot", "Using Screenshot Machine API")
         // For the MVP, just return the Screenshot Machine URL
         return screenshotUrl
       },
-      { maxRetries: 3 },
+      { maxRetries: 2 },
     )
+
+    // Create a timeout promise
+    const timeoutPromise = new Promise<string>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error("Screenshot capture timed out after 30 seconds"))
+      }, 30000) // 30 seconds timeout
+    })
+
+    // Race the capture against the timeout
+    return Promise.race([capturePromise, timeoutPromise])
   } catch (error) {
     debugLog("captureScreenshot", `Error capturing screenshot: ${error.message}`, error)
     // Return a placeholder image URL if there's an error

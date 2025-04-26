@@ -14,10 +14,23 @@ export async function analyzeWebsiteDirectly(url: string, screenshotUrl: string)
       return generateSimulatedAnalysis()
     }
 
-    // In a production environment, you would use the OpenAI API here
-    // For now, we'll use simulated data even if the API key is available
-    debugLog("analyzeWebsiteDirectly", "Using simulated analysis for now")
-    return generateSimulatedAnalysis()
+    // Set a timeout for the analysis
+    const analysisPromise = new Promise<RoastAnalysisResult>(async (resolve) => {
+      // In a production environment, you would use the OpenAI API here
+      // For now, we'll use simulated data even if the API key is available
+      debugLog("analyzeWebsiteDirectly", "Using simulated analysis for now")
+      resolve(generateSimulatedAnalysis())
+    })
+
+    // Create a timeout promise
+    const timeoutPromise = new Promise<RoastAnalysisResult>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error("Analysis timed out after 30 seconds"))
+      }, 30000) // 30 seconds timeout
+    })
+
+    // Race the analysis against the timeout
+    return Promise.race([analysisPromise, timeoutPromise])
   } catch (error) {
     debugLog("analyzeWebsiteDirectly", `Error in direct analysis: ${error.message}`, error)
     // Return a simulated analysis instead of throwing an error
