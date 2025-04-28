@@ -5,22 +5,19 @@ import { debugLog } from "../utils/debug"
 export async function captureScreenshot(url: string): Promise<string> {
   try {
     debugLog("captureScreenshot", `Capturing screenshot for URL: ${url}`)
-    const apiKey = process.env.SCREENSHOT_MACHINE_API_KEY
 
-    if (!apiKey) {
-      debugLog("captureScreenshot", "Screenshot Machine API key not configured, using placeholder screenshot")
-      // Return a placeholder image URL if the API key is not available
-      return `/placeholder.svg?height=1080&width=1920&text=${encodeURIComponent(url)}`
-    }
+    // Use APIFlash API as provided by the user
+    const apiKey = process.env.APIFLASH_ACCESS_KEY || "ea210e0e50484494918394aab7578268" // Fallback to the provided key
 
-    // Build the Screenshot Machine API URL with the API key from environment variables
-    const screenshotUrl = `https://api.screenshotmachine.com?key=${apiKey}&url=${encodeURIComponent(url)}&dimension=1920x1080&format=png&cacheLimit=0&delay=2000&timeout=20000`
+    // Build the APIFlash URL with the API key
+    const screenshotUrl = `https://api.apiflash.com/v1/urltoimage?access_key=${apiKey}&url=${encodeURIComponent(url)}&wait_until=page_loaded&fresh=true`
+
+    debugLog("captureScreenshot", `Using APIFlash with URL: ${screenshotUrl}`)
 
     // Set a timeout for the screenshot capture
     const capturePromise = withRetry(
       async () => {
-        debugLog("captureScreenshot", "Using Screenshot Machine API")
-        // For the MVP, just return the Screenshot Machine URL
+        // For the MVP, just return the APIFlash URL
         return screenshotUrl
       },
       { maxRetries: 2 },

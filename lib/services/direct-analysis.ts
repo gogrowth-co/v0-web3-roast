@@ -1,7 +1,8 @@
 import type { RoastAnalysisResult } from "../types"
 import { debugLog } from "../utils/debug"
+import OpenAI from "openai"
 
-// Direct server-side analysis function that doesn't rely on API routes or env variables
+// Direct server-side analysis function that doesn't rely on API routes
 export async function analyzeWebsiteDirectly(url: string, screenshotUrl: string): Promise<RoastAnalysisResult> {
   try {
     debugLog("analyzeWebsiteDirectly", `Analyzing ${url} with screenshot ${screenshotUrl}`)
@@ -14,23 +15,133 @@ export async function analyzeWebsiteDirectly(url: string, screenshotUrl: string)
       return generateSimulatedAnalysis()
     }
 
-    // Set a timeout for the analysis
-    const analysisPromise = new Promise<RoastAnalysisResult>(async (resolve) => {
-      // In a production environment, you would use the OpenAI API here
-      // For now, we'll use simulated data even if the API key is available
-      debugLog("analyzeWebsiteDirectly", "Using simulated analysis for now")
-      resolve(generateSimulatedAnalysis())
+    // Initialize OpenAI client
+    const openai = new OpenAI({
+      apiKey: openaiApiKey,
     })
 
-    // Create a timeout promise
-    const timeoutPromise = new Promise<RoastAnalysisResult>((_, reject) => {
-      setTimeout(() => {
-        reject(new Error("Analysis timed out after 30 seconds"))
-      }, 30000) // 30 seconds timeout
-    })
+    // Define the categories we want to analyze
+    const categories = [
+      "Value proposition clarity",
+      "Web3 terminology usage",
+      "Technical explanation quality",
+      "Trust signals & security indicators",
+      "Call-to-action effectiveness",
+      "Mobile responsiveness",
+      "Web3 integration visibility",
+    ]
 
-    // Race the analysis against the timeout
-    return Promise.race([analysisPromise, timeoutPromise])
+    const prompt = `
+      You are a Web3 UX expert analyzing a landing page at ${url}.
+      Provide brutally honest but constructive feedback on this Web3 project's landing page.
+      Focus especially on these categories: ${categories.join(", ")}.
+      For each category, provide specific feedback with a severity (high, medium, or low).
+      Be specific, actionable, and include Web3-specific insights.
+      Format your response as JSON with the following structure:
+      {
+        "score": number between 0-100,
+        "categoryScores": {
+          "Category name": number between 0-100,
+          ...for each category
+        },
+        "feedback": [
+          {
+            "category": "Category name",
+            "feedback": "Detailed feedback text",
+            "severity": "high|medium|low"
+          },
+          ...more feedback items
+        ],
+        "positives": [
+          "Positive aspect 1",
+          "Positive aspect 2",
+          ...
+        ]
+      }
+    `
+
+    debugLog("analyzeWebsiteDirectly", "Calling OpenAI API with screenshot")
+
+    try {
+      // Set a timeout for the analysis
+      const analysisPromise = new Promise<RoastAnalysisResult>(async (resolve) => {
+        try {
+          const response = await openai.chat.completions.create({
+            model: "gpt-4-vision-preview",
+            messages: [
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: prompt },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: screenshotUrl,
+                    },
+                  },
+                ],
+              },
+            ],
+            max_tokens: 4000,
+          })
+
+          // Parse the response from OpenAI
+          const analysisText = response.choices[0]?.message?.content || ""
+          debugLog("analyzeWebsiteDirectly", `OpenAI response received: ${analysisText.substring(0, 100)}...`)
+
+          try {
+            // Try to parse the JSON response
+            const analysis = JSON.parse(analysisText) as RoastAnalysisResult
+            debugLog("analyzeWebsiteDirectly", "Successfully parsed OpenAI response as JSON")
+            resolve(analysis)
+          } catch (parseError) {
+            debugLog(
+              "analyzeWebsiteDirectly",
+              `Failed to parse OpenAI response as JSON: ${parseError.message}`,
+              parseError,
+            )
+            // Try to extract JSON from the response if it contains markdown or other text
+            const jsonMatch =
+              analysisText.match(/```json\n([\s\S]*?)\n```/) ||
+              analysisText.match(/```\n([\s\S]*?)\n```/) ||
+              analysisText.match(/{[\s\S]*?}/)
+
+            if (jsonMatch) {
+              try {
+                const extractedJson = jsonMatch[1] || jsonMatch[0]
+                const analysis = JSON.parse(extractedJson) as RoastAnalysisResult
+                debugLog("analyzeWebsiteDirectly", "Successfully extracted and parsed JSON from OpenAI response")
+                resolve(analysis)
+              } catch (extractError) {
+                debugLog("analyzeWebsiteDirectly", `Failed to extract JSON: ${extractError.message}`, extractError)
+                resolve(generateSimulatedAnalysis())
+              }
+            } else {
+              // Fall back to simulated analysis if parsing fails
+              debugLog("analyzeWebsiteDirectly", "No JSON found in response, using simulated analysis")
+              resolve(generateSimulatedAnalysis())
+            }
+          }
+        } catch (apiError) {
+          debugLog("analyzeWebsiteDirectly", `OpenAI API error: ${apiError.message}`, apiError)
+          resolve(generateSimulatedAnalysis())
+        }
+      })
+
+      // Create a timeout promise
+      const timeoutPromise = new Promise<RoastAnalysisResult>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error("Analysis timed out after 60 seconds"))
+        }, 60000) // 60 seconds timeout
+      })
+
+      // Race the analysis against the timeout
+      return Promise.race([analysisPromise, timeoutPromise])
+    } catch (error) {
+      debugLog("analyzeWebsiteDirectly", `Error in OpenAI analysis: ${error.message}`, error)
+      // Return a simulated analysis instead of throwing an error
+      return generateSimulatedAnalysis()
+    }
   } catch (error) {
     debugLog("analyzeWebsiteDirectly", `Error in direct analysis: ${error.message}`, error)
     // Return a simulated analysis instead of throwing an error

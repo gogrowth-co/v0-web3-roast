@@ -13,52 +13,51 @@ import { getRoast } from "@/lib/actions/roast"
 import { ShareButton } from "@/components/share-button"
 import { EnvWarning } from "@/components/env-warning"
 import { debugLog } from "@/lib/utils/debug"
-import { SiteFooter } from "@/components/site-footer"
 import { useEffect, useState } from "react"
 
 export default function ResultsPage({ params }: { params: { id: string } }) {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     async function fetchData() {
       try {
         debugLog("ResultsPage", `Fetching roast data for ID: ${params.id}`)
 
-        // First check if we should force the loading screen
-        const urlParams = new URLSearchParams(window.location.search)
-        const forceLoading = urlParams.get("forceLoading") === "true"
-        const loadingDelay = Number.parseInt(urlParams.get("loadingDelay") || "0")
-
         // Get the roast data
         const roastData = await getRoast(params.id)
 
-        // If forceLoading is true, or if there's a loadingDelay, keep the loading state visible
-        if (forceLoading) {
-          // The loading screen will stay indefinitely until page reload
-          return
-        } else if (loadingDelay > 0) {
-          // Show loading screen for the specified delay
-          setTimeout(() => {
-            setData(roastData)
-            setLoading(false)
-          }, loadingDelay)
-        } else {
-          // Default behavior - add a small delay for better UX
-          setTimeout(() => {
-            setData(roastData)
-            setLoading(false)
-          }, 1500) // 1.5 second delay for better UX and to ensure loading is visible
+        if (!roastData.success) {
+          throw new Error(roastData.error || "Failed to fetch roast data")
         }
-      } catch (error) {
-        debugLog("ResultsPage", `Error fetching roast data: ${error}`)
-        setData({ success: false, error: error.message })
+
+        // If the roast is still processing, we'll poll for updates
+        if (roastData.roast.status === "processing") {
+          setData(roastData)
+          setLoading(false)
+
+          // Set up polling for updates if the roast is still processing
+          const pollTimer = setTimeout(() => {
+            setRetryCount((prev) => prev + 1)
+          }, 5000) // Poll every 5 seconds
+
+          return () => clearTimeout(pollTimer)
+        }
+
+        // If the roast is completed or failed, we can stop loading
+        setData(roastData)
+        setLoading(false)
+      } catch (err) {
+        debugLog("ResultsPage", `Error fetching roast data: ${err.message}`)
+        setError(err.message)
         setLoading(false)
       }
     }
 
     fetchData()
-  }, [params.id])
+  }, [params.id, retryCount])
 
   // While loading, show the loading screen
   if (loading) {
@@ -70,6 +69,46 @@ export default function ResultsPage({ params }: { params: { id: string } }) {
       created_at: new Date().toISOString(),
     }
     return <ResultsLoading roast={placeholderRoast as any} />
+  }
+
+  // If there was an error fetching the data
+  if (error) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container flex h-16 items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Link href="/" className="flex items-center gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                <span>Back to Home</span>
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 py-8">
+          <div className="container px-4 md:px-6">
+            <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
+              <XCircle className="h-16 w-16 text-red-500" />
+              <h1 className="text-3xl font-bold tracking-tighter">Error Loading Results</h1>
+              <p className="text-muted-foreground">{error}</p>
+              <div className="flex gap-4">
+                <Button asChild className="bg-brand-orange hover:bg-brand-orange/90 text-white">
+                  <Link href="/">Try Again</Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => window.location.reload()}
+                  className="border-brand-purple text-brand-purple hover:bg-brand-purple/10"
+                >
+                  Reload Page
+                </Button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
   }
 
   // If fetching failed or no data
@@ -317,52 +356,8 @@ export default function ResultsPage({ params }: { params: { id: string } }) {
               <Card className="border-brand-gray-light dark:border-brand-gray-dark">
                 <CardHeader className="pb-2">
                   <CardTitle>Next Steps</CardTitle>
-                  <CardDescription>Recommended actions</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {feedbackItems && feedbackItems.filter((item) => item.severity === "high").length > 0 && (
-                    <div className="rounded-md border border-brand-gray-light bg-muted/30 p-4 dark:border-brand-gray-dark dark:bg-muted/10">
-                      <h3 className="font-medium">High Priority</h3>
-                      <ul className="mt-2 space-y-2">
-                        {feedbackItems
-                          .filter((item) => item.severity === "high")
-                          .slice(0, 3)
-                          .map((item) => (
-                            <li key={item.id} className="flex items-start gap-2">
-                              <XCircle className="mt-0.5 h-4 w-4 text-red-500" />
-                              <span className="text-sm">{item.feedback.split(".")[0]}</span>
-                            </li>
-                          ))}
-                      </ul>
-                    </div>
-                  )}
-                  {feedbackItems && feedbackItems.filter((item) => item.severity === "medium").length > 0 && (
-                    <div className="rounded-md border border-brand-gray-light bg-muted/30 p-4 dark:border-brand-gray-dark dark:bg-muted/10">
-                      <h3 className="font-medium">Medium Priority</h3>
-                      <ul className="mt-2 space-y-2">
-                        {feedbackItems
-                          .filter((item) => item.severity === "medium")
-                          .slice(0, 3)
-                          .map((item) => (
-                            <li key={item.id} className="flex items-start gap-2">
-                              <XCircle className="mt-0.5 h-4 w-4 text-amber-500" />
-                              <span className="text-sm">{item.feedback.split(".")[0]}</span>
-                            </li>
-                          ))}
-                      </ul>
-                    </div>
-                  )}
-                  <Button className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white">
-                    Upgrade to Expert Video Roast
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </main>
+                  <CardDescription>
+What you should do next to improve your Web3 project.
+</CardDescription>
 
-      <SiteFooter />
-    </div>
-  )
-}
+\

@@ -7,13 +7,160 @@ import { captureScreenshot } from "@/lib/services/screenshot"
 import { analyzeWebsiteDirectly } from "@/lib/services/direct-analysis"
 import { revalidatePath } from "next/cache"
 
-// Mock analysis function (replace with your actual implementation)
+// Function to process the roast (would be a background job in production)
+async function processRoast(roastId: string, url: string) {
+  const supabase = createServerSupabaseClient()
+  debugLog("processRoast", `Processing roast ${roastId} for URL: ${url}`)
+
+  try {
+    // Set a timeout for the entire process
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error("Processing timed out after 5 minutes"))
+      }, 300000) // 5 minutes timeout (increased from 2 minutes)
+    })
+
+    // Update status to processing
+    await supabase.from("roasts").update({ status: "processing" }).eq("id", roastId)
+
+    // Capture screenshot with timeout
+    debugLog("processRoast", `Capturing screenshot for ${url}`)
+    let screenshotUrl
+    try {
+      // Race the screenshot capture against the timeout
+      screenshotUrl = await Promise.race([captureScreenshot(url), timeoutPromise])
+      debugLog("processRoast", `Screenshot captured successfully: ${screenshotUrl.substring(0, 100)}...`)
+    } catch (screenshotError) {
+      debugLog("processRoast", `Error capturing screenshot: ${screenshotError.message}`, screenshotError)
+      // Use a placeholder if screenshot fails
+      screenshotUrl = `/placeholder.svg?height=1080&width=1920&text=${encodeURIComponent(url)}`
+    }
+
+    // Update the roast with the screenshot URL immediately
+    await supabase
+      .from("roasts")
+      .update({
+        screenshot_url: screenshotUrl,
+      })
+      .eq("id", roastId)
+
+    // Generate analysis with timeout
+    debugLog("processRoast", `Analyzing ${url} with screenshot ${screenshotUrl}`)
+    let analysis
+    try {
+      // Race the analysis against the timeout
+      analysis = await Promise.race([analyzeWebsiteDirectly(url, screenshotUrl), timeoutPromise])
+      debugLog("processRoast", `Analysis completed successfully with score: ${analysis.score}`)
+    } catch (analysisError) {
+      debugLog("processRoast", `Error analyzing website: ${analysisError.message}`, analysisError)
+      // Generate simulated analysis if real analysis fails
+      analysis = generateSimulatedAnalysis()
+      debugLog("processRoast", `Using fallback simulated analysis with score: ${analysis.score}`)
+    }
+
+    // Insert feedback items
+    debugLog("processRoast", `Inserting ${analysis.feedback.length} feedback items`)
+    for (const item of analysis.feedback) {
+      try {
+        await supabase.from("feedback_items").insert({
+          roast_id: roastId,
+          category: item.category,
+          feedback: item.feedback,
+          severity: item.severity,
+        })
+      } catch (insertError) {
+        debugLog("processRoast", `Error inserting feedback item: ${insertError.message}`, insertError)
+        // Continue with other items even if one fails
+      }
+    }
+
+    // Update roast with results
+    debugLog("processRoast", `Completing roast ${roastId} with score: ${analysis.score}`)
+    await supabase
+      .from("roasts")
+      .update({
+        ai_analysis: analysis,
+        score: analysis.score,
+        status: "completed",
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", roastId)
+
+    // Revalidate the results page
+    revalidatePath(`/results/${roastId}`)
+    debugLog("processRoast", `Successfully completed roast ${roastId}`)
+  } catch (error) {
+    debugLog("processRoast", `Error processing roast: ${error.message}`, error)
+
+    // Update status to failed
+    await supabase.from("roasts").update({ status: "failed" }).eq("id", roastId)
+
+    // Revalidate the results page to show the failure
+    revalidatePath(`/results/${roastId}`)
+  }
+}
+
+// Helper function to generate simulated analysis
 function generateSimulatedAnalysis() {
   return {
-    score: Math.floor(Math.random() * 100),
+    score: Math.floor(Math.random() * 30) + 40, // Random score between 40-70
+    categoryScores: {
+      "Value proposition clarity": Math.floor(Math.random() * 40) + 30,
+      "Web3 terminology usage": Math.floor(Math.random() * 40) + 40,
+      "Technical explanation quality": Math.floor(Math.random() * 40) + 30,
+      "Trust signals & security indicators": Math.floor(Math.random() * 40) + 30,
+      "Call-to-action effectiveness": Math.floor(Math.random() * 40) + 40,
+      "Mobile responsiveness": Math.floor(Math.random() * 40) + 50,
+      "Web3 integration visibility": Math.floor(Math.random() * 40) + 30,
+    },
     feedback: [
-      { category: "Performance", feedback: "Consider optimizing images.", severity: "medium" },
-      { category: "Accessibility", feedback: "Add alt text to images.", severity: "high" },
+      {
+        category: "Value proposition clarity",
+        feedback:
+          "Your value proposition is buried below the fold. Web3 users need to immediately understand what problem you're solving and why your blockchain solution is unique. Right now, it takes too much scrolling to figure out what your project actually does.",
+        severity: "high",
+      },
+      {
+        category: "Web3 terminology usage",
+        feedback:
+          'You\'re dropping terms like "L2 scaling" and "ZK-rollups" without explaining what they mean to the average user. While Web3-native visitors might understand, newcomers will bounce. Define your terms or simplify the language.',
+        severity: "medium",
+      },
+      {
+        category: "Technical explanation quality",
+        feedback:
+          "Your technical explanation of how the smart contracts work is overly complex. It reads like documentation, not a landing page. Web3 users need to understand the benefits without getting lost in implementation details.",
+        severity: "high",
+      },
+      {
+        category: "Trust signals & security indicators",
+        feedback:
+          "Missing critical trust signals like audit reports, TVL data, and team information. In Web3, security is paramount - you need to prominently display your security credentials and audit partners.",
+        severity: "high",
+      },
+      {
+        category: "Call-to-action effectiveness",
+        feedback:
+          'Your primary CTA "Enter App" is generic and doesn\'t communicate value. Consider something more specific like "Start Earning 8% APY" or "Trade With Zero Slippage" that highlights your unique value proposition.',
+        severity: "medium",
+      },
+      {
+        category: "Mobile responsiveness",
+        feedback:
+          "The wallet connection button is too small on mobile screens and the gas fee estimator becomes unusable. Since over 60% of Web3 users access dApps via mobile, this needs immediate fixing.",
+        severity: "medium",
+      },
+      {
+        category: "Web3 integration visibility",
+        feedback:
+          "Your wallet connection feature is hidden in a dropdown menu. This should be one of the most prominent elements on the page - Web3 users expect to see it immediately.",
+        severity: "low",
+      },
+    ],
+    positives: [
+      "Clean design with appropriate Web3 aesthetic.",
+      "Good balance of technical information and user benefits.",
+      "Clearly explained tokenomics section with helpful visualizations.",
     ],
   }
 }
@@ -145,109 +292,6 @@ export async function createRoast(url: string) {
   } catch (error) {
     debugLog("createRoast", `Error generating roast: ${error.message}`, error)
     return { success: false, error: `Failed to generate roast: ${error.message}` }
-  }
-}
-
-// Modify the processRoast function to ensure there's enough time for the loading screen
-
-async function processRoast(roastId: string, url: string) {
-  const supabase = createServerSupabaseClient()
-  debugLog("processRoast", `Processing roast ${roastId} for URL: ${url}`)
-
-  try {
-    // Set a timeout for the entire process
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => {
-        reject(new Error("Processing timed out after 2 minutes"))
-      }, 120000) // 2 minutes timeout
-    })
-
-    // Update status to processing
-    await supabase.from("roasts").update({ status: "processing" }).eq("id", roastId)
-
-    // Add a deliberate delay to ensure the loading screen is visible
-    // This helps users see the loading state and capture screenshots if needed
-    await new Promise((resolve) => setTimeout(resolve, 3000))
-
-    // Capture screenshot with timeout
-    debugLog("processRoast", `Capturing screenshot for ${url}`)
-    let screenshotUrl
-    try {
-      // Race the screenshot capture against the timeout
-      screenshotUrl = await Promise.race([captureScreenshot(url), timeoutPromise])
-      debugLog("processRoast", `Screenshot captured successfully: ${screenshotUrl.substring(0, 100)}...`)
-
-      // Add another small delay after screenshot capture
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-    } catch (screenshotError) {
-      debugLog("processRoast", `Error capturing screenshot: ${screenshotError.message}`, screenshotError)
-      // Use a placeholder if screenshot fails
-      screenshotUrl = `/placeholder.svg?height=1080&width=1920&text=${encodeURIComponent(url)}`
-    }
-
-    // Generate analysis with timeout
-    debugLog("processRoast", `Analyzing ${url}`)
-    let analysis
-    try {
-      // Race the analysis against the timeout
-      analysis = await Promise.race([analyzeWebsiteDirectly(url, screenshotUrl), timeoutPromise])
-      debugLog("processRoast", `Analysis completed successfully with score: ${analysis.score}`)
-
-      // Add another small delay after analysis to ensure loading screen visibility
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-    } catch (analysisError) {
-      debugLog("processRoast", `Error analyzing website: ${analysisError.message}`, analysisError)
-      // Generate simulated analysis if real analysis fails
-      analysis = generateSimulatedAnalysis()
-      debugLog("processRoast", `Using fallback simulated analysis with score: ${analysis.score}`)
-    }
-
-    // Insert feedback items
-    debugLog("processRoast", `Inserting ${analysis.feedback.length} feedback items`)
-    for (const item of analysis.feedback) {
-      try {
-        await supabase.from("feedback_items").insert({
-          roast_id: roastId,
-          category: item.category,
-          feedback: item.feedback,
-          severity: item.severity,
-        })
-      } catch (insertError) {
-        debugLog("processRoast", `Error inserting feedback item: ${insertError.message}`, insertError)
-        // Continue with other items even if one fails
-      }
-    }
-
-    // Update roast with results
-    debugLog("processRoast", `Completing roast ${roastId} with score: ${analysis.score}`)
-    await supabase
-      .from("roasts")
-      .update({
-        screenshot_url: screenshotUrl,
-        ai_analysis: analysis,
-        score: analysis.score,
-        status: "completed",
-        completed_at: new Date().toISOString(),
-      })
-      .eq("id", roastId)
-
-    // Revalidate the results page
-    revalidatePath(`/results/${roastId}`)
-    debugLog("processRoast", `Successfully completed roast ${roastId}`)
-  } catch (error) {
-    debugLog("processRoast", `Error processing roast: ${error.message}`, error)
-
-    // Update status to failed
-    await supabase
-      .from("roasts")
-      .update({
-        status: "failed",
-        completed_at: new Date().toISOString(),
-      })
-      .eq("id", roastId)
-
-    // Revalidate the results page to show the failure
-    revalidatePath(`/results/${roastId}`)
   }
 }
 

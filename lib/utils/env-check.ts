@@ -10,7 +10,7 @@ export function checkEnvVars(): {
   ]
 
   // Optional environment variables (enhance functionality but not required)
-  const optionalVars: string[] = ["SCREENSHOT_MACHINE_API_KEY", "OPENAI_API_KEY"]
+  const optionalVars: string[] = ["APIFLASH_ACCESS_KEY", "OPENAI_API_KEY"]
 
   // Vercel deployment variables - not required for functionality
   const deploymentVars: string[] = ["VERCEL_REGION", "VERCEL_ENV"]
