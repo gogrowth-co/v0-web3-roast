@@ -4,9 +4,6 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/use-toast"
 import { createRoast } from "@/lib/actions/roast"
 import { EnvWarning } from "@/components/env-warning"
@@ -69,24 +66,23 @@ export function UrlForm() {
   }
 
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full max-w-2xl mx-auto">
       <EnvWarning missingVars={missingVars} />
-      <form onSubmit={handleSubmit} className="flex w-full flex-col gap-2 sm:flex-row">
-        <Input
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row">
+        <input
           type="text"
-          placeholder="Enter your Web3 website URL"
+          placeholder="Enter your Web3 project URL (e.g., https://uniswap.org)"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          className="h-10 sm:h-11 border-brand-gray-light dark:border-brand-gray-dark focus-visible:ring-brand-purple"
+          className="flex-grow rounded-lg border border-gray-600 bg-[#1a1333]/50 px-4 py-3 text-white placeholder-gray-400 focus:border-[#a78bfa] focus:outline-none sm:rounded-r-none"
         />
-        <Button
+        <button
           type="submit"
           disabled={isLoading}
-          className="h-10 sm:h-11 bg-brand-orange hover:bg-brand-orange/90 text-white"
+          className="mt-2 flex items-center justify-center rounded-lg bg-[#f97316] px-6 py-3 font-medium text-white hover:bg-[#f97316]/90 sm:mt-0 sm:rounded-l-none"
         >
-          {isLoading ? "Analyzing..." : "Analyze Free"}
-          {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
-        </Button>
+          {isLoading ? "Analyzing..." : "Roast It!"} <span className="ml-1">🔥</span>
+        </button>
       </form>
     </div>
   )

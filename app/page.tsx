@@ -1,190 +1,114 @@
-import { ArrowRight, CheckCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { HowItWorks } from "@/components/how-it-works"
-import { Testimonials } from "@/components/testimonials"
-import { FAQ } from "@/components/faq"
+import Link from "next/link"
+import { ArrowRight } from "lucide-react"
 import { UrlForm } from "@/components/url-form"
+import { FAQ } from "@/components/faq"
+import { Testimonials } from "@/components/testimonials"
 import { Stats } from "@/components/stats"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import { HowItWorks } from "@/components/how-it-works"
+import { RoastProcess } from "@/components/roast-process"
+import { SatisfactionGuarantee } from "@/components/satisfaction-guarantee"
+import { Footer } from "@/components/footer"
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <SiteHeader />
+    <div className="min-h-screen bg-gradient-to-b from-[#1a1333] to-[#121212] text-white">
+      {/* Header */}
+      <header className="container mx-auto flex items-center justify-between py-6 px-4">
+        <div className="flex items-center">
+          <h1 className="text-2xl font-bold">
+            <span className="text-[#a78bfa]">WEB3</span> <span className="text-[#f97316]">ROAST</span>{" "}
+            <span className="ml-1 rounded-md bg-[#f97316] px-2 py-0.5 text-xs font-medium text-white">BETA</span>
+          </h1>
+        </div>
 
-      <main className="flex-1">
-        {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-b from-brand-purple/5 to-transparent py-20">
-          <div className="container px-4 md:px-6">
-            <div className="grid gap-12 md:grid-cols-2 md:gap-16">
-              <div className="flex flex-col justify-center space-y-4">
-                <div className="space-y-2">
-                  <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl">
-                    Brutally Honest Feedback for Your Web3 Project
-                  </h1>
-                  <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                    Get your Web3 landing page roasted by AI and experts. Improve conversions with actionable insights.
-                  </p>
-                </div>
-                <UrlForm />
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span>100% secure and confidential</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-center">
-                <div className="relative w-full max-w-[500px] rounded-lg border bg-card p-4 shadow-lg">
-                  <div className="absolute -top-2 -right-2 rounded-full bg-brand-purple px-2 py-0.5 text-xs font-medium text-white">
-                    AI-Powered
-                  </div>
-                  <div className="space-y-4">
-                    <div className="h-40 w-full rounded-md bg-muted dark:bg-muted/20 flex items-center justify-center">
-                      <span className="text-muted-foreground">Your Web3 Site Screenshot</span>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="h-4 w-3/4 rounded bg-muted dark:bg-muted/20" />
-                      <div className="h-4 w-full rounded bg-muted dark:bg-muted/20" />
-                      <div className="h-4 w-5/6 rounded bg-muted dark:bg-muted/20" />
-                    </div>
-                    <div className="flex justify-between">
-                      <div className="h-8 w-24 rounded-md bg-brand-purple/10 dark:bg-brand-purple/20" />
-                      <div className="h-8 w-24 rounded-md bg-brand-purple/10 dark:bg-brand-purple/20" />
-                      <div className="h-8 w-24 rounded-md bg-brand-purple/10 dark:bg-brand-purple/20" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <nav className="hidden md:flex items-center space-x-8">
+          <Link href="#how-it-works" className="text-white hover:text-gray-300">
+            How it Works
+          </Link>
+          <Link href="#pricing" className="text-white hover:text-gray-300">
+            Pricing
+          </Link>
+          <Link href="#faq" className="text-white hover:text-gray-300">
+            FAQ
+          </Link>
+        </nav>
+
+        <Link
+          href="/dashboard"
+          className="rounded-full bg-[#a78bfa] px-6 py-2 font-medium text-white hover:bg-[#9b79fa]"
+        >
+          Dashboard
+        </Link>
+      </header>
+
+      {/* Hero Section */}
+      <main className="container mx-auto px-4 pt-16 pb-24 text-center">
+        {/* Promo Banner */}
+        <div className="mx-auto mb-12 max-w-xl">
+          <div className="rounded-full border border-[#a78bfa]/30 bg-[#a78bfa]/10 px-4 py-2 text-sm">
+            <span className="mr-2 inline-block h-2 w-2 rounded-full bg-[#a78bfa]"></span>
+            Beta Launch Promo: First 100 Expert Video Roasts 50% OFF
           </div>
-        </section>
+        </div>
 
-        {/* Stats Section */}
-        <Stats />
+        {/* Hero Heading */}
+        <h2 className="mx-auto mb-6 max-w-5xl text-5xl font-bold leading-tight md:text-6xl">
+          Brutally Honest <span className="gradient-text">Roasts</span>
+          <br />
+          For Your <span className="gradient-text">Web3</span> Landing Page
+        </h2>
 
-        {/* How It Works */}
-        <HowItWorks />
+        {/* Subtitle */}
+        <p className="mx-auto mb-12 max-w-2xl text-lg text-gray-300">
+          Get an AI-powered analysis with actionable feedback to dramatically improve your dApp's conversion rate and
+          user experience.
+        </p>
 
-        {/* Pricing Section */}
-        <section id="pricing" className="py-20 bg-muted/30 dark:bg-muted/5">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Choose Your Roast Level</h2>
-                <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  From quick AI insights to in-depth expert analysis, we've got you covered.
-                </p>
-              </div>
-            </div>
-            <div className="mx-auto grid max-w-5xl gap-6 py-12 lg:grid-cols-2">
-              <Card className="relative overflow-hidden border-brand-purple/20 dark:border-brand-purple/10">
-                <div className="absolute top-0 right-0 bg-brand-purple/10 dark:bg-brand-purple/20 px-3 py-1 text-xs font-medium text-brand-purple">
-                  POPULAR
-                </div>
-                <CardHeader className="space-y-1">
-                  <CardTitle className="text-2xl">🤖 Instant AI Audit</CardTitle>
-                  <CardDescription>
-                    <span className="text-3xl font-bold">FREE</span>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span>Immediate AI analysis</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span>Full page screenshot</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span>Web3-specific UX recommendations</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span>Technical assessment</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span>Instant delivery</span>
-                    </li>
-                  </ul>
-                  <Button className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white">
-                    Get Free Roast
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
-              <Card className="border-brand-purple/20 dark:border-brand-purple/10">
-                <CardHeader className="space-y-1">
-                  <CardTitle className="text-2xl">🔥 Expert Video Roast</CardTitle>
-                  <CardDescription>
-                    <span className="text-3xl font-bold">$299</span>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span>20-minute detailed video breakdown</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span>Web3 expert analysis</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span>Includes AI audit</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span>48-hour delivery</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span>Written recommendations</span>
-                    </li>
-                  </ul>
-                  <Button
-                    variant="outline"
-                    className="w-full border-brand-purple text-brand-purple hover:bg-brand-purple/10"
-                  >
-                    Get Expert Roast
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+        {/* URL Input Form */}
+        <div className="mx-auto mb-4 max-w-2xl">
+          <UrlForm />
+        </div>
+
+        {/* Free Tier Text */}
+        <p className="mb-16 text-sm text-gray-400">Free tier: Instant AI analysis with actionable recommendations</p>
+
+        {/* Feature Points */}
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          <div className="flex items-center justify-center">
+            <ArrowRight className="mr-2 h-5 w-5 text-[#a78bfa]" />
+            <span>500+ Projects Analyzed</span>
           </div>
-        </section>
-
-        {/* Testimonials */}
-        <Testimonials />
-
-        {/* FAQ Section */}
-        <FAQ />
-
-        {/* Guarantee Section */}
-        <section className="py-16 bg-brand-purple/5 dark:bg-brand-purple/10">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter">Our Guarantee</h2>
-                <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  If our roast doesn't help improve your Web3 project's conversion rate, we'll refund your money.
-                </p>
-              </div>
-              <Button size="lg" className="mt-4 bg-brand-orange hover:bg-brand-orange/90 text-white">
-                Start Your Free Roast
-              </Button>
-            </div>
+          <div className="flex items-center justify-center">
+            <ArrowRight className="mr-2 h-5 w-5 text-[#a78bfa]" />
+            <span>Web3-Specific Analysis</span>
           </div>
-        </section>
+          <div className="flex items-center justify-center">
+            <ArrowRight className="mr-2 h-5 w-5 text-[#a78bfa]" />
+            <span>Actionable Recommendations</span>
+          </div>
+        </div>
       </main>
 
-      <SiteFooter />
+      {/* Real Results Section */}
+      <Stats />
+
+      {/* How It Works Section */}
+      <HowItWorks />
+
+      {/* Roast Process Section */}
+      <RoastProcess />
+
+      {/* Testimonials Section */}
+      <Testimonials />
+
+      {/* FAQ Section */}
+      <FAQ />
+
+      {/* Satisfaction Guarantee Section */}
+      <SatisfactionGuarantee />
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

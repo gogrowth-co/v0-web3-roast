@@ -55,9 +55,9 @@ const config = {
         },
         // Brand colors
         brand: {
-          purple: "#8b5cf6",
+          purple: "#a78bfa",
           orange: "#f97316",
-          dark: "#121212",
+          dark: "#1a1333",
           "gray-light": "#e2e8f0",
           "gray-medium": "#94a3b8",
           "gray-dark": "#1e293b",
@@ -93,6 +93,9 @@ const config = {
           "Roboto",
           "sans-serif",
         ],
+      },
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
       },
     },
   },

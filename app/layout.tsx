@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
+  weight: ["400", "500", "600", "700"],
 })
 
 export const metadata = {
@@ -27,8 +28,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en" className={inter.className} suppressHydrationWarning>
-      <body className="min-h-screen bg-background font-sans antialiased">
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <body className="min-h-screen font-sans antialiased">
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} forcedTheme="dark">
           {children}
           <Toaster />
         </ThemeProvider>
