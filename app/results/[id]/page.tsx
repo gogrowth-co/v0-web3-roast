@@ -13,6 +13,7 @@ import { getRoast } from "@/lib/actions/roast"
 import { ShareButton } from "@/components/share-button"
 import { EnvWarning } from "@/components/env-warning"
 import { debugLog } from "@/lib/utils/debug"
+import { SiteFooter } from "@/components/site-footer"
 import { useEffect, useState } from "react"
 
 export default function ResultsPage({ params }: { params: { id: string } }) {
@@ -356,8 +357,52 @@ export default function ResultsPage({ params }: { params: { id: string } }) {
               <Card className="border-brand-gray-light dark:border-brand-gray-dark">
                 <CardHeader className="pb-2">
                   <CardTitle>Next Steps</CardTitle>
-                  <CardDescription>
-What you should do next to improve your Web3 project.
-</CardDescription>
+                  <CardDescription>Recommended actions</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {feedbackItems && feedbackItems.filter((item) => item.severity === "high").length > 0 && (
+                    <div className="rounded-md border border-brand-gray-light bg-muted/30 p-4 dark:border-brand-gray-dark dark:bg-muted/10">
+                      <h3 className="font-medium">High Priority</h3>
+                      <ul className="mt-2 space-y-2">
+                        {feedbackItems
+                          .filter((item) => item.severity === "high")
+                          .slice(0, 3)
+                          .map((item) => (
+                            <li key={item.id} className="flex items-start gap-2">
+                              <XCircle className="mt-0.5 h-4 w-4 text-red-500" />
+                              <span className="text-sm">{item.feedback.split(".")[0]}</span>
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
+                  {feedbackItems && feedbackItems.filter((item) => item.severity === "medium").length > 0 && (
+                    <div className="rounded-md border border-brand-gray-light bg-muted/30 p-4 dark:border-brand-gray-dark dark:bg-muted/10">
+                      <h3 className="font-medium">Medium Priority</h3>
+                      <ul className="mt-2 space-y-2">
+                        {feedbackItems
+                          .filter((item) => item.severity === "medium")
+                          .slice(0, 3)
+                          .map((item) => (
+                            <li key={item.id} className="flex items-start gap-2">
+                              <XCircle className="mt-0.5 h-4 w-4 text-amber-500" />
+                              <span className="text-sm">{item.feedback.split(".")[0]}</span>
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
+                  <Button className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white">
+                    Upgrade to Expert Video Roast
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </main>
 
-\
+      <SiteFooter />
+    </div>
+  )
+}
