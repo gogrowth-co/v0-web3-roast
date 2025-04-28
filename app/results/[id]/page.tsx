@@ -14,20 +14,71 @@ import { ShareButton } from "@/components/share-button"
 import { EnvWarning } from "@/components/env-warning"
 import { debugLog } from "@/lib/utils/debug"
 import { SiteFooter } from "@/components/site-footer"
+import { useEffect, useState } from "react"
 
-export default async function ResultsPage({ params }: { params: { id: string } }) {
-  debugLog("ResultsPage", `Rendering results page for roast ID: ${params.id}`)
+export default function ResultsPage({ params }: { params: { id: string } }) {
+  const [data, setData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
-  // Fetch roast data
-  const { success, roast, feedbackItems, error, limitedFunctionality, missingOptionalVars } = await getRoast(params.id)
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        debugLog("ResultsPage", `Fetching roast data for ID: ${params.id}`)
 
-  // If no roast found, show 404
-  if (!success || !roast) {
-    debugLog("ResultsPage", "Roast not found, showing 404")
+        // First check if we should force the loading screen
+        const urlParams = new URLSearchParams(window.location.search)
+        const forceLoading = urlParams.get("forceLoading") === "true"
+        const loadingDelay = Number.parseInt(urlParams.get("loadingDelay") || "0")
+
+        // Get the roast data
+        const roastData = await getRoast(params.id)
+
+        // If forceLoading is true, or if there's a loadingDelay, keep the loading state visible
+        if (forceLoading) {
+          // The loading screen will stay indefinitely until page reload
+          return
+        } else if (loadingDelay > 0) {
+          // Show loading screen for the specified delay
+          setTimeout(() => {
+            setData(roastData)
+            setLoading(false)
+          }, loadingDelay)
+        } else {
+          // Default behavior - add a small delay for better UX
+          setTimeout(() => {
+            setData(roastData)
+            setLoading(false)
+          }, 1500) // 1.5 second delay for better UX and to ensure loading is visible
+        }
+      } catch (error) {
+        debugLog("ResultsPage", `Error fetching roast data: ${error}`)
+        setData({ success: false, error: error.message })
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [params.id])
+
+  // While loading, show the loading screen
+  if (loading) {
+    // Show a placeholder roast while actual data loads
+    const placeholderRoast = {
+      id: params.id,
+      url: "Loading...",
+      status: "processing",
+      created_at: new Date().toISOString(),
+    }
+    return <ResultsLoading roast={placeholderRoast as any} />
+  }
+
+  // If fetching failed or no data
+  if (!data || !data.success) {
+    debugLog("ResultsPage", "Roast not found or fetch failed")
     notFound()
   }
 
-  debugLog("ResultsPage", `  \`Roast found with status: ${roast.status}`)
+  const { roast, feedbackItems, limitedFunctionality, missingOptionalVars } = data
 
   // If roast is still processing, show loading state
   if (roast.status === "processing") {

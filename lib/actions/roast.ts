@@ -148,7 +148,8 @@ export async function createRoast(url: string) {
   }
 }
 
-// Function to process the roast (would be a background job in production)
+// Modify the processRoast function to ensure there's enough time for the loading screen
+
 async function processRoast(roastId: string, url: string) {
   const supabase = createServerSupabaseClient()
   debugLog("processRoast", `Processing roast ${roastId} for URL: ${url}`)
@@ -164,6 +165,10 @@ async function processRoast(roastId: string, url: string) {
     // Update status to processing
     await supabase.from("roasts").update({ status: "processing" }).eq("id", roastId)
 
+    // Add a deliberate delay to ensure the loading screen is visible
+    // This helps users see the loading state and capture screenshots if needed
+    await new Promise((resolve) => setTimeout(resolve, 3000))
+
     // Capture screenshot with timeout
     debugLog("processRoast", `Capturing screenshot for ${url}`)
     let screenshotUrl
@@ -171,6 +176,9 @@ async function processRoast(roastId: string, url: string) {
       // Race the screenshot capture against the timeout
       screenshotUrl = await Promise.race([captureScreenshot(url), timeoutPromise])
       debugLog("processRoast", `Screenshot captured successfully: ${screenshotUrl.substring(0, 100)}...`)
+
+      // Add another small delay after screenshot capture
+      await new Promise((resolve) => setTimeout(resolve, 1500))
     } catch (screenshotError) {
       debugLog("processRoast", `Error capturing screenshot: ${screenshotError.message}`, screenshotError)
       // Use a placeholder if screenshot fails
@@ -184,6 +192,9 @@ async function processRoast(roastId: string, url: string) {
       // Race the analysis against the timeout
       analysis = await Promise.race([analyzeWebsiteDirectly(url, screenshotUrl), timeoutPromise])
       debugLog("processRoast", `Analysis completed successfully with score: ${analysis.score}`)
+
+      // Add another small delay after analysis to ensure loading screen visibility
+      await new Promise((resolve) => setTimeout(resolve, 2000))
     } catch (analysisError) {
       debugLog("processRoast", `Error analyzing website: ${analysisError.message}`, analysisError)
       // Generate simulated analysis if real analysis fails

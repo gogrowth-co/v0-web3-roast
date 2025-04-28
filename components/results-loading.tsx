@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, RefreshCw } from "lucide-react"
+import { ArrowLeft, Camera, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
@@ -11,6 +11,7 @@ import { EnvWarning } from "@/components/env-warning"
 import { retryRoast } from "@/lib/actions/roast"
 import { SystemHealthCheck } from "@/components/system-health-check"
 import { SiteFooter } from "@/components/site-footer"
+import { Progress } from "@/components/ui/progress"
 
 interface ResultsLoadingProps {
   roast: Roast
@@ -21,6 +22,49 @@ export function ResultsLoading({ roast, missingVars = [] }: ResultsLoadingProps)
   const [isRetrying, setIsRetrying] = useState(false)
   const [loadingTime, setLoadingTime] = useState(0)
   const [showDiagnostics, setShowDiagnostics] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [showDebugControls, setShowDebugControls] = useState(false)
+  const [screenshotMode, setScreenshotMode] = useState(false)
+  const [screenshotCountdown, setScreenshotCountdown] = useState<number | null>(null)
+
+  // Create a query parameter to control debug features
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const debug = urlParams.get("debug")
+    if (debug === "true") {
+      setShowDebugControls(true)
+    }
+
+    const screenshot = urlParams.get("screenshot")
+    if (screenshot === "true") {
+      setScreenshotMode(true)
+      setScreenshotCountdown(5)
+    }
+  }, [])
+
+  // Progress bar simulation
+  useEffect(() => {
+    // If in screenshot mode, progress stays at 60% for easy capture
+    if (screenshotMode) {
+      setProgress(60)
+      return
+    }
+
+    const interval = setInterval(() => {
+      setProgress((oldProgress) => {
+        // Start slow, speed up in the middle, then slow down near the end
+        let increment = 0.5
+        if (oldProgress < 30) increment = 1
+        else if (oldProgress > 70) increment = 0.2
+
+        // Max progress without completion is 95%
+        const newProgress = Math.min(95, oldProgress + increment)
+        return newProgress
+      })
+    }, 800)
+
+    return () => clearInterval(interval)
+  }, [screenshotMode])
 
   // Add a timer to track how long the page has been loading
   useEffect(() => {
@@ -41,6 +85,16 @@ export function ResultsLoading({ roast, missingVars = [] }: ResultsLoadingProps)
 
     return () => clearInterval(interval)
   }, [loadingTime, showDiagnostics, isRetrying])
+
+  // Screenshot countdown timer
+  useEffect(() => {
+    if (screenshotCountdown !== null && screenshotCountdown > 0) {
+      const timer = setTimeout(() => {
+        setScreenshotCountdown(screenshotCountdown - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [screenshotCountdown])
 
   const handleRetry = async () => {
     if (isRetrying) return // Prevent multiple simultaneous retries
@@ -87,6 +141,12 @@ export function ResultsLoading({ roast, missingVars = [] }: ResultsLoadingProps)
             </Link>
           </div>
           <div className="flex items-center gap-2">
+            {showDebugControls && (
+              <Button variant="outline" size="sm" onClick={() => setScreenshotMode(!screenshotMode)} className="mr-2">
+                <Camera className="h-4 w-4 mr-2" />
+                {screenshotMode ? "Exit Screenshot Mode" : "Screenshot Mode"}
+              </Button>
+            )}
             <Link href={`/debug/${roast.id}`} className="text-sm text-muted-foreground hover:text-foreground">
               Debug
             </Link>
@@ -104,6 +164,15 @@ export function ResultsLoading({ roast, missingVars = [] }: ResultsLoadingProps)
               <p className="text-muted-foreground">We're roasting {roast.url}</p>
             </div>
 
+            {/* Progress bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Loading your results...</span>
+                <span>{Math.round(progress)}%</span>
+              </div>
+              <Progress value={progress} className="h-2" indicatorClassName="bg-brand-purple" />
+            </div>
+
             <div className="grid gap-6 md:grid-cols-3">
               <div className="md:col-span-2">
                 <Card className="border-brand-gray-light dark:border-brand-gray-dark">
@@ -117,15 +186,24 @@ export function ResultsLoading({ roast, missingVars = [] }: ResultsLoadingProps)
                 </Card>
 
                 <div className="mt-6 flex flex-col items-center justify-center">
-                  <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-brand-purple border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+                  {screenshotMode && screenshotCountdown !== null && screenshotCountdown > 0 ? (
+                    <div className="mb-4 text-xl font-bold text-brand-orange">
+                      Screenshot time! ({screenshotCountdown}s)
+                    </div>
+                  ) : (
+                    <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-brand-purple border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+                  )}
+
                   <p className="mt-4 text-center text-sm text-muted-foreground">
-                    This typically takes about 1-2 minutes. Please don't refresh the page.
+                    {screenshotMode
+                      ? "SCREENSHOT MODE: Analysis is paused for screenshot capture"
+                      : "This typically takes about 1-2 minutes. Please don't refresh the page."}
                   </p>
                   <p className="mt-2 text-center text-sm text-muted-foreground">
                     Time elapsed: {Math.floor(loadingTime / 60)}:{(loadingTime % 60).toString().padStart(2, "0")}
                   </p>
 
-                  {loadingTime > 120 && (
+                  {loadingTime > 120 && !screenshotMode && (
                     <div className="mt-4 flex flex-col items-center space-y-2">
                       <p className="text-center text-sm text-amber-500">
                         It's taking longer than expected. You can try to restart the analysis.
@@ -190,6 +268,20 @@ export function ResultsLoading({ roast, missingVars = [] }: ResultsLoadingProps)
                     </div>
                   </CardContent>
                 </Card>
+
+                {screenshotMode && (
+                  <div className="mt-6">
+                    <Card className="border-brand-orange bg-brand-orange/10 border-2">
+                      <CardContent className="p-4">
+                        <h3 className="font-bold text-brand-orange mb-2">Screenshot Mode Active</h3>
+                        <p className="text-sm text-brand-orange/90">
+                          The loading state is frozen to allow you to capture screenshots. Add ?screenshot=true to URL
+                          to enable this mode.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
               </div>
             </div>
           </div>
